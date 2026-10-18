@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Windows 10 SDK projection is needed for the built-in OCR (Windows.Media.Ocr). -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- WFAC010 targets WinForms apps; this is a WPF app that only uses NotifyIcon, so DPI belongs in the manifest. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+    <AssemblyName>ShotMark</AssemblyName>
+    <RootNamespace>ShotMark</RootNamespace>
+    <Product>ShotMark</Product>
+    <Authors>Gean Fioramonte Trevisan</Authors>
+    <Copyright>© 2026 Gean Fioramonte Trevisan</Copyright>
+    <RepositoryUrl>https://github.com/geantrevisan/shotmark</RepositoryUrl>
+    <Version>1.0.0</Version>
+    <ApplicationIcon>Assets\ShotMark.ico</ApplicationIcon>
+    <Description>Ferramenta de captura e anotação de tela.</Description>
+  </PropertyGroup>
+
+  <!-- Release packaging: one self-contained ShotMark.exe (no .NET install needed on the user's PC). -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>pt-BR;en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\ShotMark.ico" />
+  </ItemGroup>
+
+</Project>

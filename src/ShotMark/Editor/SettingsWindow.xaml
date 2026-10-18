@@ -1,0 +1,377 @@
+<Window x:Class="ShotMark.Editor.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:ShotMark.UI"
+        Title="Configurações — ShotMark"
+        Width="860" Height="620" MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource WindowBg}"
+        Foreground="{StaticResource Fg}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontSize="13"
+        UseLayoutRounding="True"
+        ShowInTaskbar="False">
+    <DockPanel>
+        <!-- footer -->
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="16,10">
+            <DockPanel>
+                <Button DockPanel.Dock="Left" Style="{StaticResource FlatButton}" Content="Restaurar padrões" Click="Defaults_Click"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancelar" Padding="18,7" IsCancel="True" Click="Cancel_Click"/>
+                    <Button Style="{StaticResource AccentButton}" Content="Salvar" Padding="22,7" Margin="6,0,0,0" IsDefault="True" Click="Save_Click"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- navigation -->
+        <Border DockPanel.Dock="Left" Width="210" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0" Padding="10,16">
+            <StackPanel>
+                <TextBlock Text="Configurações" FontSize="15" FontWeight="SemiBold" Margin="10,0,0,14"/>
+                <RadioButton x:Name="NavGeneral" Style="{StaticResource NavButton}" Tag="General" IsChecked="True" Checked="Nav_Checked">
+                    <StackPanel Orientation="Horizontal"><ui:Icon Data="{x:Static ui:Icons.Gear}" Size="16"/><TextBlock Text="Geral" Margin="10,0,0,0"/></StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavButton}" Tag="Capture" Checked="Nav_Checked">
+                    <StackPanel Orientation="Horizontal"><ui:Icon Data="{x:Static ui:Icons.Capture}" Size="16"/><TextBlock Text="Captura" Margin="10,0,0,0"/></StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavButton}" Tag="Hotkeys" Checked="Nav_Checked">
+                    <StackPanel Orientation="Horizontal"><ui:Icon Data="{x:Static ui:Icons.Text}" Size="16"/><TextBlock Text="Atalhos" Margin="10,0,0,0"/></StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavButton}" Tag="Output" Checked="Nav_Checked">
+                    <StackPanel Orientation="Horizontal"><ui:Icon Data="{x:Static ui:Icons.Folder}" Size="16"/><TextBlock Text="Saída e arquivos" Margin="10,0,0,0"/></StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavButton}" Tag="Editor" Checked="Nav_Checked">
+                    <StackPanel Orientation="Horizontal"><ui:Icon Data="{x:Static ui:Icons.Pen}" Size="16"/><TextBlock Text="Editor" Margin="10,0,0,0"/></StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavButton}" Tag="About" Checked="Nav_Checked">
+                    <StackPanel Orientation="Horizontal"><ui:Icon Data="{x:Static ui:Icons.Layers}" Size="16"/><TextBlock Text="Sobre" Margin="10,0,0,0"/></StackPanel>
+                </RadioButton>
+            </StackPanel>
+        </Border>
+
+        <!-- pages -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,22,28,22">
+            <Grid>
+                <!-- ===== Geral ===== -->
+                <StackPanel x:Name="PageGeneral">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Geral"/>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="StartWithWindows" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Iniciar com o Windows"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="O ShotMark abre na bandeja quando você entra no Windows, pronto para o Print Screen."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="StartInTray" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Iniciar minimizado na bandeja"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Não abre o editor ao iniciar; ele aparece na primeira captura."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <RadioButton x:Name="AfterMenu" Style="{StaticResource Segment}" GroupName="After" Content="Mostrar menu"/>
+                                <RadioButton x:Name="AfterEditor" Style="{StaticResource Segment}" GroupName="After" Content="Direto no editor"/>
+                                <RadioButton x:Name="AfterCopy" Style="{StaticResource Segment}" GroupName="After" Content="Só copiar"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Depois de selecionar a área"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" TextWrapping="Wrap" Text="Mostrar menu: escolha Editar, Copiar, Salvar, Fixar, Vídeo, GIF ou Rolagem. Direto no editor: abre a imagem na hora, sem menu. Só copiar: copia e avisa. A captura é sempre salva na biblioteca."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="CopyAfterCapture" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Copiar para a área de transferência"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Cada captura fica pronta para colar (Ctrl+V) em qualquer programa."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="CopyEditsToClipboard" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Copiar também as edições"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Ao desenhar setas, textos ou desfoques, a área de transferência é atualizada com a imagem editada."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="ShowNotifications" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Mostrar notificações"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Avisos na bandeja (captura copiada, arquivo salvo, atalhos em uso)."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===== Captura ===== -->
+                <StackPanel x:Name="PageCapture" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Captura"/>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="UsePrintScreen" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Usar a tecla Print Screen"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Print Screen: região ou elemento  ·  Alt+Print Screen: janela ativa  ·  Shift+Print Screen: tela inteira. Funciona em qualquer programa."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <RadioButton x:Name="Delay0" Style="{StaticResource Segment}" GroupName="Delay" Content="Sem atraso"/>
+                                <RadioButton x:Name="Delay3" Style="{StaticResource Segment}" GroupName="Delay" Content="3 s"/>
+                                <RadioButton x:Name="Delay5" Style="{StaticResource Segment}" GroupName="Delay" Content="5 s"/>
+                                <RadioButton x:Name="Delay10" Style="{StaticResource Segment}" GroupName="Delay" Content="10 s"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Atraso da captura com atraso"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Tempo para abrir menus ou passar o mouse antes de capturar."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="IncludeCursor" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Incluir o cursor do mouse"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Desenha o ponteiro na imagem capturada."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="ShowMagnifier" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Mostrar lupa"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Zoom de pixels, coordenadas e cor sob o cursor durante a seleção. Tecla C copia a cor (#HEX)."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="SmartDetection" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Detecção inteligente de elementos"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Reconhece botões, painéis e campos dentro das janelas. Roda do mouse alterna entre elemento, janela e monitor."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="IndexText" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Indexar texto das capturas (OCR)"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Reconhece o texto das imagens para a busca da biblioteca encontrar palavras dentro das capturas."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="RecordCursor" DockPanel.Dock="Right" Style="{StaticResource Switch}"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Mostrar cursor nas gravações"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Inclui o ponteiro do mouse em vídeos e GIFs."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <RadioButton x:Name="Fps10" Style="{StaticResource Segment}" GroupName="Fps" Content="10"/>
+                                <RadioButton x:Name="Fps15" Style="{StaticResource Segment}" GroupName="Fps" Content="15"/>
+                                <RadioButton x:Name="Fps20" Style="{StaticResource Segment}" GroupName="Fps" Content="20"/>
+                                <RadioButton x:Name="Fps30" Style="{StaticResource Segment}" GroupName="Fps" Content="30"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Quadros por segundo (vídeo)"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="GIFs usam no máximo 12 fps para manter o arquivo pequeno."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===== Atalhos ===== -->
+                <StackPanel x:Name="PageHotkeys" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Atalhos"/>
+                    <TextBlock Style="{StaticResource SettingDesc}" Margin="0,-6,0,14"
+                               Text="Clique no campo e pressione a combinação desejada. Backspace remove o atalho. Atalhos usados por outro programa são avisados na bandeja."/>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <ui:HotkeyBox x:Name="HkRegion" DockPanel.Dock="Right"/>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Capturar região / elemento" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <ui:HotkeyBox x:Name="HkWindow" DockPanel.Dock="Right"/>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Capturar janela ativa" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <ui:HotkeyBox x:Name="HkFull" DockPanel.Dock="Right"/>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Capturar tela inteira" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <ui:HotkeyBox x:Name="HkRepeat" DockPanel.Dock="Right"/>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Repetir última região" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <ui:HotkeyBox x:Name="HkDelayed" DockPanel.Dock="Right"/>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Captura com atraso" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===== Saída ===== -->
+                <StackPanel x:Name="PageOutput" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Saída e arquivos"/>
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Pasta da biblioteca"/>
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="Onde os projetos editáveis (.smk) são guardados automaticamente."/>
+                            <DockPanel Margin="0,10,0,0">
+                                <Button DockPanel.Dock="Right" Content="Procurar…" Margin="8,0,0,0" Click="BrowseLibrary_Click"/>
+                                <TextBox x:Name="LibraryFolder"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Padrão de nome dos arquivos"/>
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="Use {data}, {hora}, {ano}, {mes}, {dia}."/>
+                            <TextBox x:Name="FileNamePattern" Margin="0,10,0,0" TextChanged="FileNamePattern_TextChanged"/>
+                            <TextBlock x:Name="FileNamePreview" Style="{StaticResource SettingDesc}" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <StackPanel>
+                            <DockPanel>
+                                <CheckBox x:Name="AutoExport" DockPanel.Dock="Right" Style="{StaticResource Switch}" Checked="AutoExport_Changed" Unchecked="AutoExport_Changed"/>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource SettingTitle}" Text="Salvar também como imagem automaticamente"/>
+                                    <TextBlock Style="{StaticResource SettingDesc}" Text="Grava cada captura como arquivo de imagem nesta pasta, além do projeto editável."/>
+                                </StackPanel>
+                            </DockPanel>
+                            <DockPanel x:Name="AutoExportPanel" Margin="0,10,0,0">
+                                <Button DockPanel.Dock="Right" Content="Procurar…" Margin="8,0,0,0" Click="BrowseExport_Click"/>
+                                <TextBox x:Name="AutoExportFolder"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <RadioButton x:Name="FmtPng" Style="{StaticResource Segment}" GroupName="Fmt" Content="PNG" Checked="Format_Changed"/>
+                                <RadioButton x:Name="FmtJpg" Style="{StaticResource Segment}" GroupName="Fmt" Content="JPG" Checked="Format_Changed"/>
+                                <RadioButton x:Name="FmtBmp" Style="{StaticResource Segment}" GroupName="Fmt" Content="BMP" Checked="Format_Changed"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Formato padrão de imagem"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Usado no salvamento automático e sugerido ao exportar."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border x:Name="JpegCard" Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Slider x:Name="JpegQuality" Width="180" Minimum="30" Maximum="100" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="JpegQuality_Changed"/>
+                                <TextBlock x:Name="JpegQualityText" Width="40" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource FgMuted}"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Qualidade do JPG" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===== Editor ===== -->
+                <StackPanel x:Name="PageEditor" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Editor"/>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <StackPanel x:Name="DefaultColorPanel" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"/>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Cor inicial" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Slider x:Name="DefaultThickness" Width="180" Minimum="1" Maximum="24" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="DefaultThickness_Changed"/>
+                                <TextBlock x:Name="DefaultThicknessText" Width="40" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource FgMuted}"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Espessura inicial" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Slider x:Name="DefaultFontSize" Width="180" Minimum="10" Maximum="96" IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="DefaultFontSize_Changed"/>
+                                <TextBlock x:Name="DefaultFontSizeText" Width="40" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource FgMuted}"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource SettingTitle}" Text="Tamanho de fonte inicial" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===== Sobre ===== -->
+                <StackPanel x:Name="PageAbout" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Sobre"/>
+                    <Border Style="{StaticResource SettingCard}" Padding="20">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="64" Height="64" CornerRadius="16" Background="{StaticResource AccentSoft}">
+                                <ui:Icon Data="{x:Static ui:Icons.Capture}" Size="32" StrokeWidth="2" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="ShotMark" FontSize="20" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="VersionText" Style="{StaticResource SettingDesc}"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Captura e anotação de tela em C# / .NET 8 (WPF)."/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource SettingCard}" Padding="20,16">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SettingDesc}" Text="DESENVOLVIDO POR" FontSize="11" FontWeight="SemiBold"/>
+                            <TextBlock Text="Gean Fioramonte Trevisan" FontSize="16" FontWeight="SemiBold" Margin="0,4,0,12"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Click="LinkedIn_Click" Padding="12,6" ToolTip="br.linkedin.com/in/geanfioramonte">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="18" Height="18" CornerRadius="3" Background="#0A66C2" Margin="0,0,8,0">
+                                            <TextBlock Text="in" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="LinkedIn" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Click="GitHub_Click" Padding="12,6" Margin="8,0,0,0" ToolTip="github.com/geantrevisan">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="18" Height="18" CornerRadius="9" Background="#F0F0F0" Margin="0,0,8,0">
+                                            <TextBlock Text="&lt;/&gt;" Foreground="#17181B" FontWeight="Bold" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="GitHub" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Abrir pasta da biblioteca" Click="OpenLibrary_Click"/>
+                        <Button Content="Abrir pasta de configurações" Margin="8,0,0,0" Click="OpenSettingsFolder_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
