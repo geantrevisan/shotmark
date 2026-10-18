@@ -1,9 +1,25 @@
 # ShotMark
 
-[![.NET 8](https://img.shields.io/badge/.NET-8-512BD4)](https://dotnet.microsoft.com/) ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6)
+[![.NET 8](https://img.shields.io/badge/.NET-8-512BD4)](https://dotnet.microsoft.com/) ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6) [![Release](https://img.shields.io/github/v/release/geantrevisan/shotmark)](https://github.com/geantrevisan/shotmark/releases/latest)
 
 
 ShotMark é uma ferramenta de captura e anotação de tela para Windows, escrita em C# / .NET 8 (WPF). O código foi escrito do zero, sem usar código ou recursos de nenhum produto comercial.
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Demonstração do ShotMark: passos numerados, seta, balão, desfoque, carimbo e lupa" width="900">
+</p>
+
+<p align="center"><a href="docs/demo.mp4">▶ Ver o vídeo em MP4</a></p>
+
+## Capturas de tela
+
+| Seleção com barra de ações | Editor com camadas |
+|---|---|
+| ![Barra de ações após selecionar a área](docs/action-bar.png) | ![Editor com anotações e painel de camadas](docs/editor.png) |
+
+<p align="center">
+  <img src="docs/settings.png" alt="Configurações do ShotMark" width="640">
+</p>
 
 ## Download
 
