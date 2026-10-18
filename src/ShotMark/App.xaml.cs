@@ -46,10 +46,20 @@ namespace ShotMark
             _singleInstance = new Mutex(true, "ShotMark.SingleInstance", out bool isFirst);
             if (!isFirst)
             {
-                MessageBox.Show("O ShotMark já está em execução (veja o ícone na bandeja do sistema).", "ShotMark");
+                // Already running: ask the first instance to show its window and quit quietly.
+                try
+                {
+                    using var activate = EventWaitHandle.OpenExisting(ActivateEventName);
+                    activate.Set();
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("O ShotMark já está em execução (veja o ícone na bandeja do sistema).", "ShotMark");
+                }
                 Shutdown();
                 return;
             }
+            ListenForActivation();
 
             DispatcherUnhandledException += OnUnhandledException;
             IndexLibraryBacklog();
@@ -331,7 +341,7 @@ namespace ShotMark
                         case CaptureAction.RecordGif:
                         {
                             bool gif = overlay.Action == CaptureAction.RecordGif;
-                            _ = Dispatcher.BeginInvoke(new Action(() => StartRecording(area, gif)));
+                            _ = Dispatcher.BeginInvoke(new Action(() => StartRecording(area, gif, minimizeEditor: false)));
                             break;
                         }
                         case CaptureAction.Scroll:
@@ -407,6 +417,29 @@ namespace ShotMark
             int w = Math.Min(img.PixelWidth - x, r.Width - (x - r.X));
             int h = Math.Min(img.PixelHeight - y, r.Height - (y - r.Y));
             return new Int32Rect(x, y, Math.Max(1, w), Math.Max(1, h));
+        }
+
+        private const string ActivateEventName = "ShotMark.Activate";
+        private EventWaitHandle? _activateEvent;
+
+        /// <summary>Opening ShotMark again (Start menu, desktop icon) brings the running editor to the front.</summary>
+        private void ListenForActivation()
+        {
+            _activateEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ActivateEventName);
+            var thread = new Thread(() =>
+            {
+                while (_activateEvent.WaitOne())
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        var editor = ShowEditor();
+                        editor.Activate();
+                        NativeMethods.ForceForeground(new WindowInteropHelper(editor).Handle);
+                    }));
+                }
+            })
+            { IsBackground = true, Name = "ShotMark activation" };
+            thread.Start();
         }
 
         private void OnCaptured(BitmapSource image, bool? openEditor = null, bool forceCopy = false)
@@ -543,7 +576,7 @@ namespace ShotMark
                 area => StartRecording(area, gif));
         }
 
-        private async void StartRecording(Drawing.Rectangle area, bool gif)
+        private async void StartRecording(Drawing.Rectangle area, bool gif, bool minimizeEditor = true)
         {
             if (_recorder != null) return;
             try
@@ -556,7 +589,7 @@ namespace ShotMark
                 int i = 2;
                 while (File.Exists(path)) path = Path.Combine(folder, $"{baseName} ({i++}){ext}");
 
-                if (_editor?.IsVisible == true) _editor.WindowState = WindowState.Minimized;
+                if (minimizeEditor && _editor?.IsVisible == true) _editor.WindowState = WindowState.Minimized;
                 await Countdown.RunAsync(3);
 
                 _recorder = ScreenRecorder.Start(area, Settings.RecordFps, Settings.RecordCursor, gif, path);
