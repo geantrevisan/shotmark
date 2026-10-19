@@ -64,6 +64,7 @@ namespace ShotMark.Core
         public bool ShowActionBar { get; set; } = true;
         public bool IndexText { get; set; } = true;
         public int RecordFps { get; set; } = 20;
+        public bool AutoCheckUpdates { get; set; } = true;
         public bool RecordCursor { get; set; } = true;
 
         // ---- Atalhos ----
@@ -88,6 +89,15 @@ namespace ShotMark.Core
 
         // ---- Estado ----
         public int[]? LastRegion { get; set; }
+
+        /// <summary>Editor window position/size in physical pixels (x, y, width, height), when not maximized.</summary>
+        public int[]? EditorBounds { get; set; }
+        public bool EditorMaximized { get; set; }
+
+        public DateTime? LastUpdateCheckUtc { get; set; }
+
+        /// <summary>Version the user chose to skip ("Pular esta versão"); it is not offered again.</summary>
+        public string? SkippedUpdateVersion { get; set; }
 
         [JsonIgnore]
         public static string DefaultLibraryFolder =>

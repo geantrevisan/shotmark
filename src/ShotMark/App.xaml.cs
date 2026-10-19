@@ -36,6 +36,9 @@ namespace ShotMark
         private RecordingFrame? _recordFrame;
         private DispatcherTimer? _recordTimer;
         private WinForms.ToolStripMenuItem? _stopRecordingItem;
+        private Action? _balloonAction;
+        private UpdateWindow? _updateWindow;
+        private DispatcherTimer? _updateTimer;
 
         private static AppSettings Settings => AppSettings.Current;
 
@@ -75,6 +78,13 @@ namespace ShotMark
             _icon = CreateAppIcon();
             CreateTray();
             _hotkeys = new HotkeyManager();
+            // The installer may have created the startup entry ("Iniciar com o Windows"): adopt it
+            // instead of deleting it because the setting still has its default value.
+            if (!Settings.StartWithWindows && StartupManager.IsRegistered())
+            {
+                Settings.StartWithWindows = true;
+                Settings.Save();
+            }
             ApplySettings(showWarnings: true);
 
             bool trayOnly = Array.Exists(e.Args, a => string.Equals(a, "--tray", StringComparison.OrdinalIgnoreCase)) || Settings.StartInTray;
@@ -84,10 +94,13 @@ namespace ShotMark
                 Notify("O ShotMark está na bandeja. Aperte Print Screen para capturar.");
             else
                 ShowEditor();
+
+            StartUpdateChecks();
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
+            FinishRecordingBeforeExit(); // also covers Windows shutting down / signing out
             _printHook?.Dispose();
             _hotkeys?.Dispose();
             if (_tray != null)
@@ -177,6 +190,7 @@ namespace ShotMark
             menu.Items.Add("Abrir editor", null, (_, _) => ShowEditor());
             menu.Items.Add("Abrir pasta de capturas", null, (_, _) => OpenLibraryFolder());
             menu.Items.Add("Configurações…", null, (_, _) => ShowSettings());
+            menu.Items.Add("Verificar atualizações…", null, (_, _) => CheckForUpdatesInteractive());
             menu.Items.Add(new WinForms.ToolStripSeparator());
             menu.Items.Add("Sair", null, (_, _) => ExitApp());
 
@@ -193,6 +207,13 @@ namespace ShotMark
             };
             _tray.BalloonTipClicked += (_, _) =>
             {
+                if (_balloonAction != null)
+                {
+                    var act = _balloonAction;
+                    _balloonAction = null;
+                    act();
+                    return;
+                }
                 if (_lastRecording != null && File.Exists(_lastRecording))
                 {
                     var file = _lastRecording;
@@ -259,9 +280,10 @@ namespace ShotMark
             }
         }
 
-        private void Notify(string text, bool warning = false)
+        private void Notify(string text, bool warning = false, Action? onClick = null)
         {
-            if (!Settings.ShowNotifications && !warning) return;
+            _balloonAction = onClick;
+            if (!Settings.ShowNotifications && !warning && onClick == null) return;
             _tray?.ShowBalloonTip(warning ? 8000 : 4000, "ShotMark", text, warning ? WinForms.ToolTipIcon.Warning : WinForms.ToolTipIcon.Info);
         }
 
@@ -281,7 +303,8 @@ namespace ShotMark
             if (!await BeginCapture(delaySeconds)) return;
             try
             {
-                IntPtr hwnd = NativeMethods.GetForegroundWindow();
+                // From the tray icon/menu the foreground window is the taskbar: use the app window behind it.
+                IntPtr hwnd = ScreenCapturer.ResolveTargetWindow(NativeMethods.GetForegroundWindow());
                 await Task.Delay(120);
                 var shot = ScreenCapturer.CaptureVirtualScreen(out var bounds, Settings.IncludeCursor);
                 var win = ScreenCapturer.GetWindowBounds(hwnd);
@@ -393,9 +416,9 @@ namespace ShotMark
         private async void StartFullScreenCapture()
         {
             if (!await BeginCapture(0)) return;
+            bool editorWasVisible = _editor?.IsVisible == true && _editor.WindowState != WindowState.Minimized;
             try
             {
-                bool editorWasVisible = _editor?.IsVisible == true && _editor.WindowState != WindowState.Minimized;
                 if (editorWasVisible) _editor!.Hide();
                 await Task.Delay(250);
                 var shot = ScreenCapturer.CaptureVirtualScreen(out _, Settings.IncludeCursor);
@@ -408,6 +431,8 @@ namespace ShotMark
             finally
             {
                 _capturing = false;
+                // OnCaptured only reopens the editor when the settings say so; never leave it hidden.
+                if (editorWasVisible && _editor != null && !_editor.IsVisible) _editor.Show();
             }
         }
 
@@ -674,8 +699,7 @@ namespace ShotMark
             Notify("Gravação cancelada.");
         }
 
-        /// <summary>Runs OCR after the capture so the library search finds text inside images.</summary>
-/// <summary>
+        /// <summary>
         /// Indexes (OCR) older captures that have no searchable text yet, one at a time,
         /// a few seconds after startup so it never competes with the user.
         /// </summary>
@@ -717,7 +741,8 @@ namespace ShotMark
             }
         }
 
-                private static async void IndexTextInBackground(CaptureDocument doc)
+        /// <summary>Runs OCR after the capture so the library search finds text inside images.</summary>
+        private static async void IndexTextInBackground(CaptureDocument doc)
         {
             if (!Settings.IndexText || doc.FilePath == null) return;
             try
@@ -780,8 +805,34 @@ namespace ShotMark
 
         private void ExitApp()
         {
+            FinishRecordingBeforeExit();
             _editor?.Close();
             Shutdown();
+        }
+
+        /// <summary>
+        /// Stops an ongoing recording and waits for the file to be finished. The capture and encoder
+        /// threads are background threads, so without this they would die with the process and leave
+        /// an unplayable MP4 (no index) or no GIF at all.
+        /// </summary>
+        private void FinishRecordingBeforeExit()
+        {
+            var rec = _recorder;
+            if (rec == null) return;
+            _recorder = null;
+            CloseRecordingUi();
+            try
+            {
+                // Run on the thread pool: StopAsync must not resume on this (blocked) UI thread.
+                if (Task.Run(() => rec.StopAsync()).Wait(TimeSpan.FromSeconds(20)))
+                    Log.Info($"Gravação finalizada ao sair: {rec.OutputPath}");
+                else
+                    Log.Info($"Gravação não terminou a tempo ao sair: {rec.OutputPath}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Finalizar gravação ao sair", ex);
+            }
         }
 
         private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -795,6 +846,101 @@ namespace ShotMark
         {
             Log.Error(title, ex);
             MessageBox.Show($"{title}:\n\n{ex.Message}", "ShotMark", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        // ---- updates ---------------------------------------------------------------
+
+        /// <summary>Checks GitHub shortly after startup and then every 6 hours (at most once a day each).</summary>
+        private void StartUpdateChecks()
+        {
+            _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
+            _updateTimer.Tick += (_, _) =>
+            {
+                _updateTimer.Interval = TimeSpan.FromHours(6);
+                CheckForUpdatesInBackground();
+            };
+            _updateTimer.Start();
+        }
+
+        private async void CheckForUpdatesInBackground()
+        {
+            if (!Settings.AutoCheckUpdates || _updateWindow != null) return;
+            if (Settings.LastUpdateCheckUtc is DateTime last && DateTime.UtcNow - last < TimeSpan.FromHours(20)) return;
+            try
+            {
+                var info = await UpdateService.CheckAsync();
+                Settings.LastUpdateCheckUtc = DateTime.UtcNow;
+                Settings.Save();
+                if (info == null || info.VersionText == Settings.SkippedUpdateVersion) return;
+                Log.Info($"Nova versão disponível: {info.VersionText}");
+                Notify($"ShotMark {info.VersionText} está disponível. Clique aqui para ver as novidades e atualizar.", onClick: () => ShowUpdate(info));
+            }
+            catch (Exception ex)
+            {
+                // Offline, proxy, GitHub rate limit…: try again on the next round, silently.
+                Log.Info("Verificação de atualização falhou: " + ex.Message);
+            }
+        }
+
+        /// <summary>Tray menu / Settings › Sobre: always answers, even when there is nothing new.</summary>
+        internal async void CheckForUpdatesInteractive()
+        {
+            if (_updateWindow != null)
+            {
+                _updateWindow.Activate();
+                return;
+            }
+            try
+            {
+                var info = await UpdateService.CheckAsync();
+                Settings.LastUpdateCheckUtc = DateTime.UtcNow;
+                Settings.Save();
+                if (info == null)
+                {
+                    MessageBox.Show($"Você já está usando a versão mais recente ({UpdateService.Format(UpdateService.CurrentVersion)}).",
+                        "ShotMark", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                ShowUpdate(info); // a manual check also offers a version that was skipped before
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Verificar atualizações", ex);
+                MessageBox.Show("Não foi possível verificar atualizações agora.\n\n" + ex.Message, "ShotMark",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ShowUpdate(UpdateInfo info)
+        {
+            if (_updateWindow != null)
+            {
+                _updateWindow.Activate();
+                return;
+            }
+            _updateWindow = new UpdateWindow(info, CanInstallUpdate, ExitApp) { Icon = ToImageSource(_icon) };
+            _updateWindow.Closed += (_, _) =>
+            {
+                if (_updateWindow?.Skipped == true)
+                {
+                    Settings.SkippedUpdateVersion = info.VersionText;
+                    Settings.Save();
+                }
+                _updateWindow = null;
+            };
+            _updateWindow.Show();
+            _updateWindow.Activate();
+        }
+
+        private bool CanInstallUpdate()
+        {
+            if (_recorder != null || _capturing)
+            {
+                MessageBox.Show("Termine a gravação ou a captura em andamento antes de atualizar.", "ShotMark",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return false;
+            }
+            return true;
         }
 
         // ---- icon ----------------------------------------------------------------

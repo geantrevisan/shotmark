@@ -1,5 +1,6 @@
 ﻿; Instalador do ShotMark (Inno Setup 6) — https://jrsoftware.org/isinfo.php
 ; Compilado pelo build-installer.cmd ou pelo GitHub Actions (.github/workflows/release.yml).
+; A atualização automática do app roda este instalador com /SILENT.
 ; Uso manual: iscc /DAppVersion=1.0.0 /DSourceDir=..\publish\win-x64 installer\ShotMark.iss
 
 #ifndef AppVersion
@@ -67,6 +68,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; Atualização automática (o app roda o instalador com /SILENT): reabre o ShotMark ao terminar.
+Filename: "{app}\{#AppExe}"; Flags: nowait runasoriginaluser; Check: WizardSilent
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/im {#AppExe} /f"; Flags: runhidden; RunOnceId: "KillShotMark"

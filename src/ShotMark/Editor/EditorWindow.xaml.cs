@@ -101,6 +101,11 @@ namespace ShotMark.Editor
             };
 
             SourceInitialized += (_, _) => ShotMark.Native.NativeMethods.UseDarkTitleBar(this);
+            // Size to the user's screen (or reuse the last position) instead of a fixed 1360×860.
+            WindowFit.SizeToMonitor(this, 0.85, 0.88, 2000, 1300,
+                AppSettings.Current.EditorBounds, AppSettings.Current.EditorMaximized, maximizeOnSmallScreens: true);
+            LocationChanged += (_, _) => RememberBounds();
+            SizeChanged += (_, _) => RememberBounds();
             PreviewKeyDown += Window_PreviewKeyDown;
             Drop += Window_Drop;
             Loaded += (_, _) => RefreshLibrary();
@@ -1199,7 +1204,7 @@ namespace ShotMark.Editor
             FontText.Text = ((int)e.NewValue).ToString();
             Surface.CurrentFontSize = e.NewValue;
             if (Surface.Selected is TextAnnotation)
-                EditSelected(a => ((TextAnnotation)a).FontSize = e.NewValue);
+                EditSelected(a => { if (a is TextAnnotation ta) ta.FontSize = e.NewValue; });
         }
 
         private void Capture_Click(object sender, RoutedEventArgs e) => CaptureRequested?.Invoke(this, EventArgs.Empty);
@@ -1509,6 +1514,22 @@ namespace ShotMark.Editor
         {
             CloseInlineEditor(commit: true);
             SaveCurrent(showStatus: false);
+
+            var s = AppSettings.Current;
+            if (_normalBounds != null) s.EditorBounds = _normalBounds;
+            s.EditorMaximized = WindowState == WindowState.Maximized;
+            s.Save();
+        }
+
+        private int[]? _normalBounds;
+
+        /// <summary>Remembers the window rectangle (physical pixels) while it is neither maximized nor minimized.</summary>
+        private void RememberBounds()
+        {
+            if (!IsLoaded || WindowState != WindowState.Normal) return;
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            if (hwnd != IntPtr.Zero && ShotMark.Native.NativeMethods.GetWindowRect(hwnd, out var r))
+                _normalBounds = new[] { r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top };
         }
     }
 }

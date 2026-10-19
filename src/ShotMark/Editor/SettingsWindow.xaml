@@ -342,6 +342,16 @@
                             </StackPanel>
                         </StackPanel>
                     </Border>
+                    <Border Style="{StaticResource SettingCard}">
+                        <DockPanel>
+                            <CheckBox x:Name="AutoCheckUpdates" DockPanel.Dock="Right" Style="{StaticResource Switch}" VerticalAlignment="Center"/>
+                            <Button DockPanel.Dock="Right" Content="Verificar agora" Margin="0,0,14,0" VerticalAlignment="Center" Click="CheckUpdates_Click"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SettingTitle}" Text="Atualizações automáticas"/>
+                                <TextBlock Style="{StaticResource SettingDesc}" Text="Uma vez por dia o ShotMark procura uma versão nova no GitHub e avisa pela bandeja. Nada é instalado sem você confirmar."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
                     <Border Style="{StaticResource SettingCard}" Padding="20,16">
                         <StackPanel>
                             <TextBlock Style="{StaticResource SettingDesc}" Text="DESENVOLVIDO POR" FontSize="11" FontWeight="SemiBold"/>

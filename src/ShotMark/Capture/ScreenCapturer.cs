@@ -175,6 +175,47 @@ namespace ShotMark.Capture
             return sb.ToString();
         }
 
+        private static readonly string[] ShellClasses =
+        {
+            "Shell_TrayWnd", "Shell_SecondaryTrayWnd", "NotifyIconOverflowWindow",
+            "TopLevelWindowForOverflowXamlIsland", "Progman", "WorkerW", "#32768",
+        };
+
+        /// <summary>
+        /// The window the user means by "active window". When the command comes from the tray icon or
+        /// its menu, the foreground window is the taskbar (or our own menu); in that case the topmost
+        /// ordinary application window — the one that was active before — is returned instead.
+        /// </summary>
+        public static IntPtr ResolveTargetWindow(IntPtr foreground)
+        {
+            if (IsAppWindow(foreground, requireTitle: false)) return foreground;
+
+            IntPtr found = IntPtr.Zero;
+            NativeMethods.EnumWindows((hWnd, _) =>
+            {
+                long ex = NativeMethods.GetWindowLongPtr(hWnd, NativeMethods.GWL_EXSTYLE).ToInt64();
+                if ((ex & NativeMethods.WS_EX_TOPMOST) != 0) return true; // pinned images, widgets, overlays
+                if (!IsAppWindow(hWnd, requireTitle: true)) return true;
+                found = hWnd;
+                return false;
+            }, IntPtr.Zero);
+            return found;
+        }
+
+        private static bool IsAppWindow(IntPtr hWnd, bool requireTitle)
+        {
+            if (hWnd == IntPtr.Zero || hWnd == NativeMethods.GetShellWindow()) return false;
+            if (!NativeMethods.IsWindowVisible(hWnd) || NativeMethods.IsIconic(hWnd)) return false;
+            if (NativeMethods.DwmGetWindowAttribute(hWnd, NativeMethods.DWMWA_CLOAKED, out int cloaked, sizeof(int)) == 0 && cloaked != 0)
+                return false;
+            long ex = NativeMethods.GetWindowLongPtr(hWnd, NativeMethods.GWL_EXSTYLE).ToInt64();
+            if ((ex & (NativeMethods.WS_EX_TOOLWINDOW | NativeMethods.WS_EX_TRANSPARENT)) != 0) return false;
+            if (Array.IndexOf(ShellClasses, ClassName(hWnd)) >= 0) return false;
+            if (requireTitle && NativeMethods.GetWindowTextLength(hWnd) == 0) return false;
+            var r = GetWindowBounds(hWnd);
+            return r.Width > 1 && r.Height > 1;
+        }
+
         /// <summary>Visible bounds of a window in physical screen pixels (without the invisible resize border).</summary>
         public static Drawing.Rectangle GetWindowBounds(IntPtr hWnd)
         {
@@ -184,6 +225,14 @@ namespace ShotMark.Capture
                 NativeMethods.GetWindowRect(hWnd, out r);
             }
             return Drawing.Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom);
+        }
+
+        /// <summary>Work area (monitor minus taskbar) of the monitor containing a virtual-screen-relative pixel.</summary>
+        public static Int32Rect WorkAreaAt(Drawing.Rectangle virtualScreen, int x, int y)
+        {
+            var screen = WinForms.Screen.FromPoint(new Drawing.Point(x + virtualScreen.X, y + virtualScreen.Y));
+            var b = screen.WorkingArea;
+            return new Int32Rect(b.X - virtualScreen.X, b.Y - virtualScreen.Y, b.Width, b.Height);
         }
 
         /// <summary>The monitor containing a virtual-screen-relative pixel.</summary>

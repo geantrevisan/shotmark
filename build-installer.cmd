@@ -6,7 +6,7 @@ rem Uso: build-installer.cmd [versao]     ex.: build-installer.cmd 1.0.0
 setlocal
 cd /d "%~dp0"
 set VERSION=%~1
-if "%VERSION%"=="" set VERSION=1.0.0
+if "%VERSION%"=="" set VERSION=1.1.0
 
 echo === ShotMark %VERSION% ===> installer.log
 taskkill /im ShotMark.exe /f >nul 2>&1
@@ -34,6 +34,9 @@ echo Gerando instalador...
 if errorlevel 1 goto fail
 
 :done
+rem Checksums: o ShotMark confere o download da atualizacao automatica com este arquivo.
+rem Publique na release do GitHub: o Setup .exe, o ZIP portatil e o SHA256SUMS.txt.
+powershell -NoProfile -Command "$f = Get-ChildItem 'dist' -File | Where-Object { $_.Name -like '*%VERSION%*' -and $_.Extension -in '.exe','.zip' }; $f | ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } | Set-Content -Encoding ascii 'dist\SHA256SUMS.txt'" >> installer.log 2>&1
 echo EXITCODE=0 >> installer.log
 type installer.log
 dir /b dist
