@@ -275,6 +275,9 @@ namespace ShotMark.Editor
 
         private void GitHub_Click(object sender, RoutedEventArgs e) => OpenUrl("https://github.com/geantrevisan");
 
+        private void WhatsNew_Click(object sender, RoutedEventArgs e) =>
+            (Application.Current as App)?.ShowWhatsNew();
+
         private void CheckUpdates_Click(object sender, RoutedEventArgs e) =>
             (Application.Current as App)?.CheckForUpdatesInteractive();
 

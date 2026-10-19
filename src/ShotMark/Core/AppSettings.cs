@@ -99,6 +99,13 @@ namespace ShotMark.Core
         /// <summary>Version the user chose to skip ("Pular esta versão"); it is not offered again.</summary>
         public string? SkippedUpdateVersion { get; set; }
 
+        /// <summary>Version whose "Novidades" the user has already been told about.</summary>
+        public string? LastSeenVersion { get; set; }
+
+        /// <summary>True when there was no settings file yet (fresh install, nothing to announce).</summary>
+        [JsonIgnore]
+        public static bool IsFirstRun { get; private set; }
+
         [JsonIgnore]
         public static string DefaultLibraryFolder =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ShotMark");
@@ -121,7 +128,9 @@ namespace ShotMark.Core
             catch (Exception)
             {
                 // Corrupt settings: start with defaults.
+                return new AppSettings();
             }
+            IsFirstRun = true;
             return new AppSettings();
         }
 

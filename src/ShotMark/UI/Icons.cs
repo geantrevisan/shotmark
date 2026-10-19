@@ -62,6 +62,7 @@ namespace ShotMark.UI
         public static Geometry Image { get; } = G("M3,5 L21,5 L21,19 L3,19 Z M3,16 L8.5,11 L13,15 L16,12.5 L21,16.5 M14.5,9 A1.5,1.5 0 1 0 17.5,9 A1.5,1.5 0 1 0 14.5,9 Z");
         public static Geometry Blur { get; } = G("M12,3 C12,3 5.5,10.5 5.5,14.5 A6.5,6.5 0 0 0 18.5,14.5 C18.5,10.5 12,3 12,3 Z M9,15 A3,3 0 0 0 12,18");
         public static Geometry Spotlight { get; } = G("M3,4 L21,4 L21,20 L3,20 Z M8,9 L16,9 L16,15 L8,15 Z M3,4 L8,9 M21,4 L16,9 M3,20 L8,15 M21,20 L16,15");
+        public static Geometry Sparkle { get; } = G("M10,3 L11.8,8.7 L17.5,10.5 L11.8,12.3 L10,18 L8.2,12.3 L2.5,10.5 L8.2,8.7 Z M18,13 L18.9,15.6 L21.5,16.5 L18.9,17.4 L18,20 L17.1,17.4 L14.5,16.5 L17.1,15.6 Z");
         public static Geometry Gear { get; } = G("M9,12 A3,3 0 1 0 15,12 A3,3 0 1 0 9,12 Z M12,2.5 L12,5.5 M12,18.5 L12,21.5 M2.5,12 L5.5,12 M18.5,12 L21.5,12 M5.3,5.3 L7.4,7.4 M16.6,16.6 L18.7,18.7 M5.3,18.7 L7.4,16.6 M16.6,7.4 L18.7,5.3");
         public static Geometry Pin { get; } = G("M9,3 L15,3 L14,9.5 L17.5,13 L6.5,13 L10,9.5 Z M12,13 L12,21");
         public static Geometry Print { get; } = G("M7,9 L7,3 L17,3 L17,9 M6,17 L3,17 L3,9 L21,9 L21,17 L18,17 M7,13.5 L17,13.5 L17,21 L7,21 Z");

@@ -62,17 +62,14 @@ namespace ShotMark.UI
                 TextWrapping = TextWrapping.Wrap,
             };
 
-            var notes = new TextBox
+            var notes = new Border
             {
-                Text = string.IsNullOrWhiteSpace(info.Notes) ? "(sem notas para esta versão)" : info.Notes.Replace("\r\n", "\n").Replace("\n", Environment.NewLine),
-                IsReadOnly = true,
-                TextWrapping = TextWrapping.Wrap,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 Background = (Brush)Application.Current.FindResource("PanelBg"),
-                Foreground = (Brush)Application.Current.FindResource("Fg"),
                 BorderBrush = (Brush)Application.Current.FindResource("LineBrush"),
                 BorderThickness = new Thickness(1),
-                Padding = new Thickness(10),
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(16, 12, 8, 4),
+                Child = MarkdownView.Create(string.IsNullOrWhiteSpace(info.Notes) ? "(sem notas para esta versão)" : info.Notes),
             };
 
             _progress = new ProgressBar { Height = 6, Minimum = 0, Maximum = 1, Margin = new Thickness(0, 12, 0, 0), Visibility = Visibility.Collapsed };
