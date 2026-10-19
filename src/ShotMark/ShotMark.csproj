@@ -36,6 +36,8 @@
 
   <ItemGroup>
     <Resource Include="Assets\ShotMark.ico" />
+    <!-- Notas de versão exibidas no app (botão Novidades). -->
+    <EmbeddedResource Include="..\..\CHANGELOG.md" LogicalName="CHANGELOG.md" Link="CHANGELOG.md" />
   </ItemGroup>
 
 </Project>

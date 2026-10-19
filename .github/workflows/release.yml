@@ -54,10 +54,26 @@ jobs:
         run: |
           Get-ChildItem dist | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } | Set-Content dist/SHA256SUMS.txt
 
+      - name: Notas da versão (CHANGELOG.md)
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $out = @(); $in = $false
+          foreach ($l in Get-Content CHANGELOG.md -Encoding utf8) {
+            if ($l -match '^## ') {
+              if ($in) { break }
+              if ($l -match ('^##\s+\[?v?' + [regex]::Escape($v) + '\b')) { $in = $true }
+              continue
+            }
+            if ($in) { $out += $l }
+          }
+          if ($out.Count -eq 0) { $out = @("Veja o [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md).") }
+          $out | Set-Content release-notes.md -Encoding utf8
+
       - name: Publicar release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}
           name: ShotMark ${{ steps.ver.outputs.version }}
-          generate_release_notes: true
+          body_path: release-notes.md
           files: dist/*

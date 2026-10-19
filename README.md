@@ -173,6 +173,8 @@ git tag v1.1.0
 git push origin v1.1.0
 ```
 
+Antes de criar a tag, escreva a seção da versão no [`CHANGELOG.md`](CHANGELOG.md): ela vira o texto da release no GitHub, aparece na janela de atualização e no botão **Novidades** do app.
+
 O script do instalador fica em `installer/ShotMark.iss` e os workflows em `.github/workflows/`. A atualização automática depende dos nomes desses três arquivos na release (`ShotMark-Setup-x.y.z.exe`, `ShotMark-x.y.z-win-x64-portable.zip`, `SHA256SUMS.txt`).
 
 ## Atualizações automáticas

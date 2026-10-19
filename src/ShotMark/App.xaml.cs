@@ -39,6 +39,8 @@ namespace ShotMark
         private Action? _balloonAction;
         private UpdateWindow? _updateWindow;
         private DispatcherTimer? _updateTimer;
+        private WhatsNewWindow? _whatsNewWindow;
+        private bool _hasUnseenNews;
 
         private static AppSettings Settings => AppSettings.Current;
 
@@ -96,6 +98,7 @@ namespace ShotMark
                 ShowEditor();
 
             StartUpdateChecks();
+            AnnounceNewVersion();
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -190,6 +193,7 @@ namespace ShotMark
             menu.Items.Add("Abrir editor", null, (_, _) => ShowEditor());
             menu.Items.Add("Abrir pasta de capturas", null, (_, _) => OpenLibraryFolder());
             menu.Items.Add("Configurações…", null, (_, _) => ShowSettings());
+            menu.Items.Add("Novidades da versão", null, (_, _) => ShowWhatsNew());
             menu.Items.Add("Verificar atualizações…", null, (_, _) => CheckForUpdatesInteractive());
             menu.Items.Add(new WinForms.ToolStripSeparator());
             menu.Items.Add("Sair", null, (_, _) => ExitApp());
@@ -786,6 +790,8 @@ namespace ShotMark
                 _editor.SettingsRequested += (_, _) => ShowSettings();
                 _editor.ScrollCaptureRequested += (_, _) => StartScrollFlow();
                 _editor.RecordRequested += (_, gif) => StartRecordingFlow(gif);
+                _editor.WhatsNewRequested += (_, _) => ShowWhatsNew();
+                _editor.SetNewsBadge(_hasUnseenNews);
                 _editor.Closed += (_, _) => _editor = null;
             }
 
@@ -846,6 +852,60 @@ namespace ShotMark
         {
             Log.Error(title, ex);
             MessageBox.Show($"{title}:\n\n{ex.Message}", "ShotMark", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        // ---- what's new -----------------------------------------------------------
+
+        /// <summary>
+        /// First start after an update (manual or automatic): a tray notice opens the release notes,
+        /// and the editor's "Novidades" button shows a dot until they are opened.
+        /// </summary>
+        private void AnnounceNewVersion()
+        {
+            var current = UpdateService.CurrentVersion;
+            string currentText = UpdateService.Format(current);
+            var seen = UpdateService.ParseVersion(Settings.LastSeenVersion ?? "");
+
+            if (seen == null && AppSettings.IsFirstRun)
+            {
+                // Fresh install: nothing "new" to announce.
+                Settings.LastSeenVersion = currentText;
+                Settings.Save();
+                return;
+            }
+            if (seen != null && seen >= current) return;
+
+            // Updated (or coming from 1.0.0, which did not record the version).
+            _hasUnseenNews = true;
+            _editor?.SetNewsBadge(true);
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+            timer.Tick += (_, _) =>
+            {
+                timer.Stop();
+                Notify($"O ShotMark foi atualizado para a versão {currentText}. Clique aqui para ver as novidades.",
+                    onClick: () => ShowWhatsNew(justUpdated: true));
+            };
+            timer.Start();
+        }
+
+        internal void ShowWhatsNew() => ShowWhatsNew(justUpdated: false);
+
+        private void ShowWhatsNew(bool justUpdated)
+        {
+            if (_whatsNewWindow != null)
+            {
+                _whatsNewWindow.Activate();
+                return;
+            }
+            _whatsNewWindow = new WhatsNewWindow(justUpdated) { Icon = ToImageSource(_icon) };
+            _whatsNewWindow.Closed += (_, _) => _whatsNewWindow = null;
+            _whatsNewWindow.Show();
+            _whatsNewWindow.Activate();
+
+            Settings.LastSeenVersion = UpdateService.Format(UpdateService.CurrentVersion);
+            Settings.Save();
+            _hasUnseenNews = false;
+            _editor?.SetNewsBadge(false);
         }
 
         // ---- updates ---------------------------------------------------------------

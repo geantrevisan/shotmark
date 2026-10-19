@@ -128,6 +128,16 @@
                         </StackPanel>
                     </Button>
                     <Border Style="{StaticResource Divider}"/>
+                    <Button Style="{StaticResource FlatButton}" Click="WhatsNew_Click" ToolTip="O que mudou nesta versão">
+                        <StackPanel Orientation="Horizontal">
+                            <Grid>
+                                <ui:Icon Data="{x:Static ui:Icons.Sparkle}" Size="17"/>
+                                <Ellipse x:Name="NewsBadge" Width="8" Height="8" Fill="{StaticResource Danger}"
+                                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-3,0" Visibility="Collapsed"/>
+                            </Grid>
+                            <TextBlock Text="Novidades" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                     <Button Style="{StaticResource IconButton}" Click="Settings_Click" ToolTip="Configurações  (Ctrl+,)">
                         <ui:Icon Data="{x:Static ui:Icons.Gear}"/>
                     </Button>

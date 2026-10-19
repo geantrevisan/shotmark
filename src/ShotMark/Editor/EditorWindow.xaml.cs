@@ -127,6 +127,10 @@ namespace ShotMark.Editor
         public event EventHandler? SettingsRequested;
         public event EventHandler? ScrollCaptureRequested;
         public event EventHandler<bool>? RecordRequested; // true = GIF, false = MP4
+        public event EventHandler? WhatsNewRequested;
+
+        /// <summary>Red dot on the "Novidades" button while the notes of a new version were not opened yet.</summary>
+        public void SetNewsBadge(bool on) => NewsBadge.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
 
         /// <summary>Applies the default colour / thickness / font from the settings.</summary>
         public void ApplySettings()
@@ -583,6 +587,7 @@ namespace ShotMark.Editor
         private void Delay10_Click(object sender, RoutedEventArgs e) => DelayedCaptureRequested?.Invoke(this, 10);
         private void RepeatRegion_Click(object sender, RoutedEventArgs e) => RepeatCaptureRequested?.Invoke(this, EventArgs.Empty);
         private void Settings_Click(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
+        private void WhatsNew_Click(object sender, RoutedEventArgs e) => WhatsNewRequested?.Invoke(this, EventArgs.Empty);
         private void ScrollCapture_Click(object sender, RoutedEventArgs e) => ScrollCaptureRequested?.Invoke(this, EventArgs.Empty);
         private void RecordMp4_Click(object sender, RoutedEventArgs e) => RecordRequested?.Invoke(this, false);
         private void RecordGif_Click(object sender, RoutedEventArgs e) => RecordRequested?.Invoke(this, true);
