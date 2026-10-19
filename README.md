@@ -165,15 +165,24 @@ Para gerar um PNG/JPG final, use **Exportar** ou **Copiar**.
 
 ## Gerar o instalador
 
-- **Local:** `build-installer.cmd 1.0.0` gera em `dist\` o ZIP portátil e, se o [Inno Setup 6](https://jrsoftware.org/isinfo.php) estiver instalado (`winget install JRSoftware.InnoSetup`), o `ShotMark-Setup-1.0.0.exe`.
+- **Local:** `build-installer.cmd 1.1.0` gera em `dist\` o ZIP portátil, o `SHA256SUMS.txt` e, se o [Inno Setup 6](https://jrsoftware.org/isinfo.php) estiver instalado (`winget install JRSoftware.InnoSetup`), o `ShotMark-Setup-1.1.0.exe`.
 - **GitHub (automático):** ao enviar uma tag de versão, o GitHub Actions compila, gera o instalador, o ZIP e os checksums, e publica a release:
 
 ```
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
-O script do instalador fica em `installer/ShotMark.iss` e os workflows em `.github/workflows/`.
+O script do instalador fica em `installer/ShotMark.iss` e os workflows em `.github/workflows/`. A atualização automática depende dos nomes desses três arquivos na release (`ShotMark-Setup-x.y.z.exe`, `ShotMark-x.y.z-win-x64-portable.zip`, `SHA256SUMS.txt`).
+
+## Atualizações automáticas
+
+Uma vez por dia (e em **Configurações › Sobre › Verificar agora** ou no menu da bandeja), o ShotMark consulta a última release de `github.com/geantrevisan/shotmark`. Se a tag for mais nova que a versão em uso, ele avisa pela bandeja e mostra as notas da release.
+
+- **Instalado pelo Setup:** baixa o `ShotMark-Setup-x.y.z.exe`, roda em modo silencioso (mesma pasta e mesmo modo de instalação) e o instalador reabre o ShotMark.
+- **Versão portátil (ZIP):** baixa o ZIP e troca os arquivos depois que o ShotMark fecha, reabrindo em seguida.
+- O download é conferido com o `SHA256SUMS.txt` da release. Rascunhos e pré-releases são ignorados.
+- Nada é instalado sem confirmação. "Pular esta versão" deixa de avisar sobre ela, e a verificação automática pode ser desligada em Configurações › Sobre.
 
 ## Compilar com um clique
 
@@ -204,6 +213,9 @@ src/ShotMark/
     EditorCanvas.cs        Superfície de desenho e gestos do mouse
     TextInputDialog.cs     Diálogo de texto
   Services/OcrService.cs   OCR nativo do Windows
+  Services/UpdateService.cs Atualização automática pelas releases do GitHub
+  UI/UpdateWindow.cs       Janela "nova versão disponível"
+  UI/WindowFit.cs          Tamanho das janelas conforme o monitor
 ```
 
 ## Próximos passos sugeridos

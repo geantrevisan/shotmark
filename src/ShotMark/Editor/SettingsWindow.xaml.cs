@@ -30,6 +30,8 @@ namespace ShotMark.Editor
             _working = AppSettings.Current.Clone();
             _defaultColor = _working.DefaultColor;
             SourceInitialized += (_, _) => ShotMark.Native.NativeMethods.UseDarkTitleBar(this);
+            // Designed for 860×620; shrink (never grow) on small screens or high display scaling.
+            ShotMark.UI.WindowFit.SizeToMonitor(this, 0.92, 0.9, 860, 620);
             BuildColorPicker();
             Load(_working);
             VersionText.Text = "Versão " + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
@@ -61,6 +63,7 @@ namespace ShotMark.Editor
             SmartDetection.IsChecked = s.SmartDetection;
             IndexText.IsChecked = s.IndexText;
             RecordCursor.IsChecked = s.RecordCursor;
+            AutoCheckUpdates.IsChecked = s.AutoCheckUpdates;
             (s.RecordFps <= 10 ? Fps10 : s.RecordFps <= 15 ? Fps15 : s.RecordFps <= 20 ? Fps20 : Fps30).IsChecked = true;
 
             HkRegion.Hotkey = s.RegionHotkey;
@@ -104,6 +107,7 @@ namespace ShotMark.Editor
             s.SmartDetection = SmartDetection.IsChecked == true;
             s.IndexText = IndexText.IsChecked == true;
             s.RecordCursor = RecordCursor.IsChecked == true;
+            s.AutoCheckUpdates = AutoCheckUpdates.IsChecked == true;
             s.RecordFps = Fps10.IsChecked == true ? 10 : Fps15.IsChecked == true ? 15 : Fps30.IsChecked == true ? 30 : 20;
 
             s.RegionHotkey = HkRegion.Hotkey;
@@ -270,6 +274,9 @@ namespace ShotMark.Editor
         private void LinkedIn_Click(object sender, RoutedEventArgs e) => OpenUrl("https://br.linkedin.com/in/geanfioramonte");
 
         private void GitHub_Click(object sender, RoutedEventArgs e) => OpenUrl("https://github.com/geantrevisan");
+
+        private void CheckUpdates_Click(object sender, RoutedEventArgs e) =>
+            (Application.Current as App)?.CheckForUpdatesInteractive();
 
         private void OpenLibrary_Click(object sender, RoutedEventArgs e)
         {

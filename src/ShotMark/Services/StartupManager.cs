@@ -9,6 +9,20 @@ namespace ShotMark.Services
         private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
         private const string ValueName = "ShotMark";
 
+        /// <summary>True when the per-user Run entry exists (set by the installer or by ShotMark itself).</summary>
+        public static bool IsRegistered()
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: false);
+                return key?.GetValue(ValueName) != null;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public static void Apply(bool enabled)
         {
             try

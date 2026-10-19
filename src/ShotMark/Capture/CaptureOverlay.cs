@@ -553,9 +553,14 @@ namespace ShotMark.Capture
                 var c = new Point(hp.X * ScaleX, hp.Y * ScaleY);
                 dc.DrawRectangle(HandleFill, SelectionPen, new Rect(c.X - 4.5, c.Y - 4.5, 9, 9));
             }
-            DrawLabel(dc, $"{_sel.Width} × {_sel.Height}", new Point(r.X, r.Y - 32 < 0 ? r.Y + 6 : r.Y - 32));
+            DrawLabel(dc, $"{_sel.Width} × {_sel.Height}", LabelPos(_sel));
 
             // ---- action bar ----
+            // Everything is placed inside the work area of the monitor that holds the selection: the
+            // overlay spans the whole virtual screen, which can include areas no monitor shows
+            // (monitors of different sizes) and the taskbar.
+            var mon = WorkAreaDip(_sel);
+            const double margin = 8;
             double ppd = VisualTreeHelper.GetDpi(this).PixelsPerDip;
             var specs = new List<(CaptureAction? Action, string Label, Geometry Icon, bool GapBefore)>
             {
@@ -569,18 +574,54 @@ namespace ShotMark.Capture
                 (null, "", Icons.Unlock, true),
             };
             const double h = 34, pad = 6, gap = 2, sep = 12;
-            var texts = specs.Select(sp => sp.Label.Length == 0 ? null : MakeText(sp.Label, 12.5, Brushes.White, FontWeights.Normal, ppd)).ToList();
-            double width = pad * 2;
-            for (int i = 0; i < specs.Count; i++)
+
+            List<FormattedText?> MakeLabels(bool withText) =>
+                specs.Select(sp => !withText || sp.Label.Length == 0 ? null : MakeText(sp.Label, 12.5, Brushes.White, FontWeights.Normal, ppd)).ToList();
+            double Measure(List<FormattedText?> t)
             {
-                width += 12 + 16 + (texts[i] != null ? 7 + texts[i]!.Width : 0) + 12 + gap + (specs[i].GapBefore ? sep : 0);
+                double w = pad * 2;
+                for (int i = 0; i < specs.Count; i++)
+                    w += 12 + 16 + (t[i] != null ? 7 + t[i]!.Width : 0) + 12 + gap + (specs[i].GapBefore ? sep : 0);
+                return w;
             }
 
-            double x = Math.Max(full.X + 8, Math.Min(r.X, full.Right - width - 8));
-            double y = r.Bottom + 10;
-            if (y + h + pad * 2 > full.Bottom - 6) y = r.Y - h - pad * 2 - 10;
-            if (y < 6) y = r.Bottom - h - pad * 2 - 10;
-            var bar = new Rect(x, y, width, h + pad * 2);
+            var texts = MakeLabels(true);
+            double width = Measure(texts);
+            if (width > mon.Width - margin * 2)
+            {
+                // Small screen (or high display scaling): show the buttons as icons only.
+                texts = MakeLabels(false);
+                width = Measure(texts);
+            }
+            double barH = h + pad * 2;
+
+            const string tip = "Arraste as alças para ajustar  ·  Enter: editar  ·  Ctrl+C: copiar  ·  Esc: cancelar  ·  Para ir direto ao editor: Configurações › Geral";
+            var tipText = MakeText(tip, 11.5, MutedText, FontWeights.Normal, ppd);
+            tipText.MaxTextWidth = Math.Max(60, mon.Width - margin * 2 - 16);
+            tipText.MaxLineCount = 1;
+            tipText.Trimming = TextTrimming.CharacterEllipsis;
+            double tipH = tipText.Height + 10;
+
+            // Below the selection, else above it, else (selection fills the screen) inside its bottom edge.
+            double y;
+            bool tipBelow = true;
+            if (r.Bottom + 10 + barH + tipH <= mon.Bottom - margin)
+            {
+                y = r.Bottom + 10;
+            }
+            else if (r.Top - 10 - barH - tipH >= mon.Top + margin)
+            {
+                y = r.Top - 10 - barH;
+                tipBelow = false;
+            }
+            else
+            {
+                double insideBottom = Math.Min(r.Bottom, mon.Bottom);
+                y = insideBottom - margin - 8 - barH - tipH;
+            }
+            y = Math.Max(mon.Top + margin, Math.Min(mon.Bottom - margin - barH, y));
+            double x = Math.Max(mon.Left + margin, Math.Min(r.X, mon.Right - width - margin));
+            var bar = new Rect(x, y, width, barH);
             dc.DrawRoundedRectangle(LabelBrush, null, bar, 10, 10);
 
             _buttons.Clear();
@@ -612,11 +653,32 @@ namespace ShotMark.Capture
                 bx += bw + gap;
             }
 
-            const string tip = "Arraste as alças para ajustar  ·  Enter: editar  ·  Ctrl+C: copiar  ·  Esc: cancelar  ·  Para ir direto ao editor: Configurações › Geral";
-            var tipText = MakeText(tip, 11.5, MutedText, FontWeights.Normal, ppd);
-            double ty = bar.Y > r.Bottom ? bar.Bottom + 6 : bar.Y - tipText.Height - 6;
-            if (ty > 0 && ty + tipText.Height < full.Bottom)
-                dc.DrawText(tipText, new Point(bar.X + 8, ty));
+            // Hint on a small backdrop so it stays readable over any screenshot.
+            double ty = tipBelow ? bar.Bottom + 6 : bar.Top - tipH;
+            if (ty >= mon.Top && ty + tipH <= mon.Bottom)
+            {
+                double tx = Math.Max(mon.Left + margin, Math.Min(bar.X, mon.Right - margin - tipText.Width - 16));
+                dc.DrawRoundedRectangle(LabelBrush, null, new Rect(tx, ty, tipText.Width + 16, tipH - 4), 6, 6);
+                dc.DrawText(tipText, new Point(tx + 8, ty + 3));
+            }
+        }
+
+        /// <summary>Work area (without the taskbar) of the monitor holding the centre of a selection, in DIPs.</summary>
+        private Rect WorkAreaDip(Int32Rect sel)
+        {
+            int cx = Math.Max(0, Math.Min(_shot.PixelWidth - 1, sel.X + sel.Width / 2));
+            int cy = Math.Max(0, Math.Min(_shot.PixelHeight - 1, sel.Y + sel.Height / 2));
+            return ToDip(ScreenCapturer.WorkAreaAt(_virtual, cx, cy));
+        }
+
+        /// <summary>Size label just above the selection, or inside its top edge — always on a visible monitor.</summary>
+        private Point LabelPos(Int32Rect sel)
+        {
+            var r = ToDip(sel);
+            var mon = WorkAreaDip(sel);
+            double y = r.Y - 32 >= mon.Top + 4 ? r.Y - 32 : Math.Max(r.Y, mon.Top) + 6;
+            double x = Math.Max(mon.Left + 4, Math.Min(r.X, mon.Right - 220));
+            return new Point(x, y);
         }
 
         private static readonly Geometry CloseIcon = Freeze(Geometry.Parse("M6,6 L18,18 M18,6 L6,18"));
@@ -654,7 +716,7 @@ namespace ShotMark.Capture
                 string label = _dragging || Current == null
                     ? $"{s.Width} × {s.Height}"
                     : $"{Current.Value.Kind}  ·  {s.Width} × {s.Height}" + (_levels.Count > 1 ? $"   ({_level + 1}/{_levels.Count})" : "");
-                DrawLabel(dc, label, new Point(r.X, r.Y - 32 < 0 ? r.Y + 6 : r.Y - 32));
+                DrawLabel(dc, label, LabelPos(s));
             }
             else
             {
@@ -681,9 +743,11 @@ namespace ShotMark.Capture
 
         private void DrawMagnifier(DrawingContext dc, Point cursor, Rect full)
         {
+            // Keep the magnifier on the monitor under the cursor (not just inside the virtual screen).
+            var mon = ToDip(ScreenCapturer.MonitorAt(_virtual, _curX, _curY));
             double x = cursor.X + 24, y = cursor.Y + 24;
-            if (x + MagnifierSize > full.Right) x = cursor.X - 24 - MagnifierSize;
-            if (y + MagnifierSize + 30 > full.Bottom) y = cursor.Y - 24 - MagnifierSize - 30;
+            if (x + MagnifierSize > mon.Right) x = cursor.X - 24 - MagnifierSize;
+            if (y + MagnifierSize + 30 > mon.Bottom) y = cursor.Y - 24 - MagnifierSize - 30;
             var box = new Rect(x, y, MagnifierSize, MagnifierSize);
 
             int half = MagnifierPixels / 2;

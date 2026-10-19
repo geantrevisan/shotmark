@@ -19,7 +19,7 @@
     <Authors>Gean Fioramonte Trevisan</Authors>
     <Copyright>© 2026 Gean Fioramonte Trevisan</Copyright>
     <RepositoryUrl>https://github.com/geantrevisan/shotmark</RepositoryUrl>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <ApplicationIcon>Assets\ShotMark.ico</ApplicationIcon>
     <Description>Ferramenta de captura e anotação de tela.</Description>
   </PropertyGroup>
